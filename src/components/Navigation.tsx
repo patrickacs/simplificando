@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import QuizModal from './Quiz/QuizModal';
+import { useScrollInfo } from './SmoothScroll';
 
 const navLinks = [
   { name: 'Home', href: '/' },
@@ -16,7 +17,7 @@ const navLinks = [
   { name: '360', href: '/360' },
 ];
 
-// Logo mapping by route - using white logo for glass header
+// Logo mapping by route - using white logo for all
 const logoConfig: Record<string, string> = {
   '/': '/logos/white/LOGO HORIZONTAL BRANCA.png',
   '/extensivo': '/logos/white/LOGO HORIZONTAL BRANCA.png',
@@ -25,14 +26,20 @@ const logoConfig: Record<string, string> = {
   '/360': '/logos/white/LOGO HORIZONTAL BRANCA.png',
 };
 
-// Button color mapping by route
-const buttonColorConfig: Record<string, string> = {
-  '/': '#00B0FF',
-  '/extensivo': '#9B59B6',
-  '/intensivo': '#27AE60',
-  '/imersao': '#E67E22',
-  '/360': '#00B0FF',
+// ============================
+// CORES POR ROTA
+// ============================
+// Mapeamento de cores por rota - usado no header e page transition
+export const routeColors: Record<string, string> = {
+  '/': '#00B0FF',          // Azul - Home
+  '/extensivo': '#9B59B6', // Roxo - Extensivo
+  '/intensivo': '#27AE60', // Verde - Intensivo
+  '/imersao': '#E67E22',   // Laranja - Imersão
+  '/360': '#00B0FF',       // Azul - 360
 };
+
+// Verifica se é a home (para liquid glass)
+const isHomePage = (pathname: string) => pathname === '/';
 
 export default function Navigation() {
   const [isVisible, setIsVisible] = useState(true);
@@ -41,54 +48,31 @@ export default function Navigation() {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const navRef = useRef<HTMLElement>(null);
-  const lastScrollY = useRef(0);
   const pathname = usePathname();
 
+  // Usar scroll info do Lenis
+  const { scrollY, direction } = useScrollInfo();
+
   const currentLogo = logoConfig[pathname] || logoConfig['/'];
-  const buttonColor = buttonColorConfig[pathname] || buttonColorConfig['/'];
+  const routeColor = routeColors[pathname] || routeColors['/'];
+  const isHome = isHomePage(pathname);
 
+  // Simple scroll-based visibility
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+    const threshold = 100;
 
-      // Show/hide based on scroll direction
-      if (currentScrollY > lastScrollY.current && currentScrollY > 150) {
-        // Scrolling down - hide
+    if (scrollY < threshold) {
+      setIsVisible(true);
+      setIsAtTop(true);
+    } else {
+      setIsAtTop(false);
+      if (direction === 'down') {
         setIsVisible(false);
-      } else {
-        // Scrolling up - show
+      } else if (direction === 'up') {
         setIsVisible(true);
       }
-
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Detect when header is over Hero section based on scroll position
-  useEffect(() => {
-    const checkHeroVisibility = () => {
-      const heroSection = document.querySelector('.hero-section');
-      if (!heroSection) {
-        setIsAtTop(false);
-        return;
-      }
-
-      const heroRect = heroSection.getBoundingClientRect();
-      // Header is over hero if hero bottom is still visible from top
-      // (hero bottom > 100px from viewport top)
-      setIsAtTop(heroRect.bottom > 100);
-    };
-
-    // Check on mount
-    checkHeroVisibility();
-
-    // Check on scroll
-    window.addEventListener('scroll', checkHeroVisibility, { passive: true });
-    return () => window.removeEventListener('scroll', checkHeroVisibility);
-  }, [pathname]);
+    }
+  }, [scrollY, direction]);
 
   useEffect(() => {
     if (navRef.current) {
@@ -104,6 +88,18 @@ export default function Navigation() {
     return () => { document.body.style.overflow = ''; };
   }, [isMobileOpen]);
 
+  // Determinar o estilo do header baseado na rota e scroll
+  const getHeaderStyle = () => {
+    // Home: liquid glass no topo, solid quando scrollar
+    if (isHome) {
+      return isAtTop ? 'glass' : 'solid-home';
+    }
+    // Outras rotas: sempre cor sólida da rota
+    return 'solid-route';
+  };
+
+  const headerStyle = getHeaderStyle();
+
   return (
     <>
       <style jsx global>{`
@@ -114,16 +110,15 @@ export default function Navigation() {
           right: 0;
           z-index: 200;
           padding: 1rem 2rem;
-          transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+          transition: transform 0.5s ease-out, opacity 0.3s ease;
+          transform: translateY(0);
+          opacity: 1;
         }
         .nav-wrapper.hidden {
-          transform: translateY(-120%);
-        }
-        .nav-wrapper.visible {
-          transform: translateY(0);
+          transform: translateY(-110%);
+          opacity: 0;
         }
         
-        /* Liquid Glass Effect (Apple style) - when at top */
         .nav-pill {
           max-width: 1200px;
           margin: 0 auto;
@@ -132,12 +127,10 @@ export default function Navigation() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          transition: all 1s cubic-bezier(0.16, 1, 0.3, 1), 
-                      background 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s,
-                      backdrop-filter 1s ease-out 0.1s,
-                      box-shadow 1s ease-out 0.15s,
-                      border 1s ease-out 0.1s;
+          transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        /* Liquid Glass Effect - APENAS Home no topo */
         .nav-pill.glass {
           background: rgba(255, 255, 255, 0.12);
           backdrop-filter: blur(24px) saturate(180%);
@@ -146,16 +139,27 @@ export default function Navigation() {
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 
                       inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
-        .nav-pill.solid {
+
+        /* Solid Home - quando scroll na home */
+        .nav-pill.solid-home {
           background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
           border: 1px solid transparent;
           box-shadow: 0 4px 30px rgba(0,0,0,0.25);
+          backdrop-filter: none;
+        }
+
+        /* Solid Route - cor da rota (sem glass) */
+        .nav-pill.solid-route {
+          border: 1px solid transparent;
+          box-shadow: 0 4px 30px rgba(0,0,0,0.25);
+          backdrop-filter: none;
         }
         
         .nav-logo {
           height: 36px;
           width: auto;
           object-fit: contain;
+          margin-left: 0.5rem;
         }
         .nav-right {
           display: flex;
@@ -253,7 +257,6 @@ export default function Navigation() {
           right: 0;
           width: 280px;
           height: 100vh;
-          background: linear-gradient(180deg, #1e3a5f 0%, #2d4a6f 100%);
           z-index: 250;
           padding: 100px 2rem 2rem;
           display: flex;
@@ -320,7 +323,10 @@ export default function Navigation() {
         ref={navRef}
         className={`nav-wrapper ${isVisible ? 'visible' : 'hidden'}`}
       >
-        <div className={`nav-pill ${isAtTop ? 'glass' : 'solid'}`}>
+        <div
+          className={`nav-pill ${headerStyle}`}
+          style={headerStyle === 'solid-route' ? { background: routeColor } : undefined}
+        >
           <Link href="/" style={{ display: 'flex', alignItems: 'center' }}>
             <motion.div whileHover={{ scale: 1.05 }}>
               <Image
@@ -351,8 +357,8 @@ export default function Navigation() {
               transition={{ delay: 1.1 }}
               className="nav-cta solid"
               style={{
-                backgroundColor: isButtonHovered ? 'transparent' : buttonColor,
-                borderColor: isButtonHovered ? 'white' : buttonColor
+                backgroundColor: isButtonHovered ? 'transparent' : (isHome ? routeColor : 'rgba(255,255,255,0.2)'),
+                borderColor: isButtonHovered ? 'white' : (isHome ? routeColor : 'rgba(255,255,255,0.5)')
               }}
               onMouseEnter={() => setIsButtonHovered(true)}
               onMouseLeave={() => setIsButtonHovered(false)}
@@ -367,7 +373,10 @@ export default function Navigation() {
           <div className="mobile-controls">
             <motion.button
               className="mobile-cta"
-              style={{ backgroundColor: buttonColor, borderColor: buttonColor }}
+              style={{
+                backgroundColor: isHome ? routeColor : 'rgba(255,255,255,0.2)',
+                borderColor: isHome ? routeColor : 'rgba(255,255,255,0.5)'
+              }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsQuizOpen(true)}
             >
@@ -395,6 +404,7 @@ export default function Navigation() {
             />
             <motion.div
               className="mobile-menu"
+              style={{ background: routeColor }}
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}

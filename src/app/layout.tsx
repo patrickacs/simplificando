@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
-import Navigation from "@/components/Navigation";
+import ClientWrapper from "@/components/ClientWrapper";
 
 export const metadata: Metadata = {
   title: "Simplificando a Jornada | Preparatório para Link School of Business",
@@ -30,8 +30,9 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body suppressHydrationWarning>
         <SmoothScroll>
-          <Navigation />
-          <main>{children}</main>
+          <ClientWrapper>
+            {children}
+          </ClientWrapper>
         </SmoothScroll>
       </body>
     </html>

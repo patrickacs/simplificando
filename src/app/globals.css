@@ -93,7 +93,7 @@
   --color-text-muted: #888888;
 
   /* Background Colors */
-  --color-background: #FFFFFA;
+  --color-background: #FEFFFA;
   --color-background-alt: #F5F5F5;
   --color-background-dark: #1A1A1A;
 
@@ -468,39 +468,52 @@ p {
 /* ============================================
    SCROLLBAR
    ============================================ */
+/* Works on Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+/* Works on Chrome, Edge, and Safari */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  /* Slightly thinner */
   background: transparent;
 }
 
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: transparent !important;
+  border-radius: 0;
 }
 
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
+  background-color: var(--color-primary);
   border-radius: var(--radius-full);
+  border: none;
+  /* Removes any default border */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-dark);
+  background-color: var(--color-primary-dark);
 }
 
-/* Hide scrollbar buttons/arrows */
+/* Hide buttons (arrows) completely */
+html::-webkit-scrollbar-button,
+body::-webkit-scrollbar-button,
 ::-webkit-scrollbar-button {
-  display: none;
-  height: 0;
+  display: none !important;
   width: 0;
+  height: 0;
 }
 
 ::-webkit-scrollbar-corner {
   background: transparent;
-}
-
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
 }
 
 /* ============================================

@@ -1,11 +1,24 @@
 'use client';
 
-import { useEffect, useRef, ReactNode } from 'react';
+import { useEffect, useRef, ReactNode, createContext, useContext, useState } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Context para compartilhar scroll info
+interface ScrollContextType {
+    scrollY: number;
+    direction: 'up' | 'down' | null;
+    lenis: Lenis | null;
+}
+
+const ScrollContext = createContext<ScrollContextType>({ scrollY: 0, direction: null, lenis: null });
+
+export function useScrollInfo() {
+    return useContext(ScrollContext);
+}
 
 interface SmoothScrollProps {
     children: ReactNode;
@@ -13,6 +26,10 @@ interface SmoothScrollProps {
 
 export default function SmoothScroll({ children }: SmoothScrollProps) {
     const lenisRef = useRef<Lenis | null>(null);
+    const [scrollY, setScrollY] = useState(0);
+    const [direction, setDirection] = useState<'up' | 'down' | null>(null);
+    const lastScrollY = useRef(0);
+    const rafId = useRef<number | null>(null);
 
     useEffect(() => {
         const lenis = new Lenis({
@@ -26,23 +43,59 @@ export default function SmoothScroll({ children }: SmoothScrollProps) {
 
         lenisRef.current = lenis;
 
-        // Update ScrollTrigger on scroll
-        lenis.on('scroll', ScrollTrigger.update);
+        // Handler de scroll
+        const handleScroll = (e: { scroll: number; velocity: number }) => {
+            ScrollTrigger.update();
 
-        // Sync GSAP with Lenis
-        gsap.ticker.add((time) => {
-            lenis.raf(time * 1000);
-        });
+            const currentY = e.scroll;
+            const delta = currentY - lastScrollY.current;
 
-        gsap.ticker.lagSmoothing(0);
+            // Threshold para detectar mudança de direção
+            const directionThreshold = 1;
+
+            // Atualizar apenas se houver movimento significativo
+            if (Math.abs(delta) > directionThreshold) {
+                const newDirection = delta > 0 ? 'down' : 'up';
+
+                // Atualizar scrollY
+                setScrollY(currentY);
+
+                // Atualizar direction apenas se mudou
+                setDirection(prev => prev !== newDirection ? newDirection : prev);
+
+                lastScrollY.current = currentY;
+            }
+        };
+
+        lenis.on('scroll', handleScroll);
+
+        // RAF loop para o Lenis
+        function raf(time: number) {
+            lenis.raf(time);
+            rafId.current = requestAnimationFrame(raf);
+        }
+
+        rafId.current = requestAnimationFrame(raf);
 
         return () => {
+            lenis.off('scroll', handleScroll);
             lenis.destroy();
-            gsap.ticker.remove((time) => {
-                lenis.raf(time * 1000);
-            });
+            if (rafId.current) {
+                cancelAnimationFrame(rafId.current);
+            }
         };
     }, []);
 
-    return <>{children}</>;
+    // Valor do contexto com lenis ref
+    const contextValue: ScrollContextType = {
+        scrollY,
+        direction,
+        lenis: lenisRef.current
+    };
+
+    return (
+        <ScrollContext.Provider value={contextValue}>
+            {children}
+        </ScrollContext.Provider>
+    );
 }
