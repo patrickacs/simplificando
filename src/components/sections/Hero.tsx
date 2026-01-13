@@ -27,7 +27,7 @@ const slides = [
   {
     image: '/home/carrossel/IMG_1865.jpg',
     title: ['Conquiste', 'seu Objetivo'],
-    subtitle: 'Metodologia exclusiva desenvolvida por especialistas para maximizar seu desempenho nas provas mais concorridas do país.',
+    subtitle: 'Metodologia exclusiva desenvolvida por alunos da Link para maximizar seu desempenho no processo seletivo.',
     objectPosition: 'center center', // Centralizado
     wrapperWidth: '100%',
     wrapperHeight: '130%',

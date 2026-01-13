@@ -5,88 +5,88 @@ import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 
 // Dados dos cards de números
 const numbersData = [
-    {
-        number: '+260',
-        label: 'Alunos Aprovados',
-        description: 'Mais de 260 alunos aprovados na Jornada Link desde nossa fundação.',
-        color: '#9B59B6', // Roxo
-        icon: '🎓',
-    },
-    {
-        number: '4',
-        label: 'Primeiros Lugares',
-        description: 'Conquistamos 4 primeiros lugares nas últimas edições da Jornada.',
-        color: '#00B0FF', // Azul
-        icon: '🏆',
-    },
-    {
-        number: '86%',
-        label: 'Taxa de Aprovação',
-        description: 'Nossa taxa de aprovação é de 86%, a maior entre os preparatórios.',
-        color: '#27AE60', // Verde
-        icon: '✓',
-    },
-    {
-        number: '+50',
-        label: 'Mentores Especializados',
-        description: 'Time de mentores ex-alunos da Link prontos para te ajudar.',
-        color: '#E67E22', // Laranja
-        icon: '👥',
-    },
+  {
+    number: '+260',
+    label: 'Alunos Aprovados',
+    description: 'Mais de 260 alunos aprovados na Jornada Link desde nossa fundação.',
+    color: '#9B59B6', // Roxo
+    icon: '🎓',
+  },
+  {
+    number: '4',
+    label: 'Primeiros Lugares',
+    description: 'Conquistamos 4 primeiros lugares nas últimas edições da Jornada.',
+    color: '#00B0FF', // Azul
+    icon: '🏆',
+  },
+  {
+    number: '86%',
+    label: 'Taxa de Aprovação',
+    description: 'Nossa taxa de aprovação é de 86%, a maior entre os preparatórios.',
+    color: '#27AE60', // Verde
+    icon: '✓',
+  },
+  {
+    number: '+5',
+    label: 'Anos de Experiência',
+    description: 'Acompanhamos quase todas as Jornadas desde o início da faculdade.',
+    color: '#E67E22', // Laranja
+    icon: '👥',
+  },
 ];
 
 interface NumberCardProps {
-    i: number;
-    number: string;
-    label: string;
-    description: string;
-    color: string;
-    icon: string;
-    progress: MotionValue<number>;
-    range: [number, number];
-    targetScale: number;
+  i: number;
+  number: string;
+  label: string;
+  description: string;
+  color: string;
+  icon: string;
+  progress: MotionValue<number>;
+  range: [number, number];
+  targetScale: number;
 }
 
 function NumberCard({ i, number, label, description, color, icon, progress, range, targetScale }: NumberCardProps) {
-    const container = useRef<HTMLDivElement>(null);
+  const container = useRef<HTMLDivElement>(null);
 
-    useScroll({
-        target: container,
-        offset: ['start end', 'start start']
-    });
+  useScroll({
+    target: container,
+    offset: ['start end', 'start start']
+  });
 
-    const scale = useTransform(progress, range, [1, targetScale]);
+  const scale = useTransform(progress, range, [1, targetScale]);
 
-    return (
-        <div ref={container} className="number-card-container">
-            <motion.div
-                className="number-card"
-                style={{
-                    backgroundColor: color,
-                    scale,
-                    top: `calc(-5vh + ${i * 30}px)`,
-                }}
-            >
-                <div className="card-icon">{icon}</div>
-                <div className="card-number">{number}</div>
-                <div className="card-label">{label}</div>
-                <p className="card-description">{description}</p>
-            </motion.div>
-        </div>
-    );
+  return (
+    <div ref={container} className="number-card-container">
+      <motion.div
+        className="number-card"
+        style={{
+          backgroundColor: color,
+          scale,
+          top: `calc(-5vh + ${i * 30}px)`,
+        }}
+      >
+        <div className="card-icon">{icon}</div>
+        <div className="card-number">{number}</div>
+        <div className="card-label">{label}</div>
+        <p className="card-description">{description}</p>
+      </motion.div>
+    </div>
+  );
 }
 
 export default function NumbersSection() {
-    const container = useRef<HTMLDivElement>(null);
+  const container = useRef<HTMLDivElement>(null);
 
-    const { scrollYProgress } = useScroll({
-        target: container,
-        offset: ['start start', 'end end']
-    });
+  const { scrollYProgress } = useScroll({
+    target: container,
+    offset: ['start start', 'end end']
+  });
 
-    return (
-        <>
-            <style jsx global>{`
+  return (
+    <>
+      <style jsx global>{`
         .numbers-section {
           position: relative;
           background: #FEFFFA;
@@ -262,37 +262,37 @@ export default function NumbersSection() {
         }
       `}</style>
 
-            <section className="numbers-section">
-                <div className="numbers-container">
-                    <div className="numbers-left">
-                        <h2 className="numbers-title">
-                            Alguns números<br />
-                            por trás dos <span>resultados</span>
-                        </h2>
-                        <p className="numbers-subtitle">
-                            Esses números representam mais do que estatísticas.
-                            Eles mostram a força da nossa comunidade, a consistência
-                            do nosso trabalho e o impacto real que criamos para você.
-                        </p>
-                    </div>
+      <section className="numbers-section">
+        <div className="numbers-container">
+          <div className="numbers-left">
+            <h2 className="numbers-title">
+              Alguns números<br />
+              por trás dos <span>resultados</span>
+            </h2>
+            <p className="numbers-subtitle">
+              Esses números representam mais do que estatísticas.
+              Eles mostram a força da nossa comunidade, a consistência
+              do nosso trabalho e o impacto real que criamos para você.
+            </p>
+          </div>
 
-                    <div ref={container} className="numbers-right">
-                        {numbersData.map((data, i) => {
-                            const targetScale = 1 - ((numbersData.length - i) * 0.05);
-                            return (
-                                <NumberCard
-                                    key={`number_${i}`}
-                                    i={i}
-                                    {...data}
-                                    progress={scrollYProgress}
-                                    range={[i * 0.25, 1]}
-                                    targetScale={targetScale}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-        </>
-    );
+          <div ref={container} className="numbers-right">
+            {numbersData.map((data, i) => {
+              const targetScale = 1 - ((numbersData.length - i) * 0.05);
+              return (
+                <NumberCard
+                  key={`number_${i}`}
+                  i={i}
+                  {...data}
+                  progress={scrollYProgress}
+                  range={[i * 0.25, 1]}
+                  targetScale={targetScale}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </>
+  );
 }
